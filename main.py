@@ -228,12 +228,11 @@ exit_button.grid(row=10, column=0, sticky='w', padx=50, pady=10)
 # Text in the bottom
 def open_url(url):
     webbrowser.open(url)
-about_label = tk.Label(root, text="github.com/wtigga  ||  Vladimir Zhdanov, 2023-03-26", fg="blue", cursor="hand2")
+about_label = tk.Label(root, text="github.com/wtigga  ||  Vladimir Zhdanov, 2023-03-28", fg="blue", cursor="hand2")
 about_text = tk.Label(root, text="Diff for translation sources.")
 about_text.grid(row=6, column=1, sticky='e', padx=0, pady=0)
-about_label.bind("<Button-1>", lambda event: open_url("https://github.com/wtigga/TranslationSourceExcelFilesReportGeneratorGI"))
+about_label.bind("<Button-1>", lambda event: open_url("https://github.com/wtigga/Translation-Files-Diff-Report-HK"))
 about_label.grid(row=7, column=1, sticky='e', padx=10, pady=0)
-
 
 
 ### EXECUTING ###
