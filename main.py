@@ -2,13 +2,14 @@ import openpyxl
 import pandas as pd
 from diff_match_patch import diff_match_patch
 import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
-from tkinter import *
-from tkinter import messagebox
+from tkinter import ttk, filedialog, messagebox
+from tkinter import Tk, StringVar, Button, Entry
 import time
+import datetime
 import webbrowser
 import os
+
+current_version = '0.11 (2023-03-28)'
 
 # Set Pandas display options
 pd.set_option('display.max_rows', None)
@@ -21,12 +22,10 @@ pd.set_option('display.expand_frame_repr', False)
 # File 1
 source_file_one_simplename = 'Default File1 name'
 source_file_one = 'venv/source_files/real_Files/one.xlsx'
-#source_file_one = 'venv/source_files/one.xlsx' #default
 
 # File 2
 source_file_two_simplename = 'Default File2 name'
 source_file_two = 'venv/source_files/real_Files/two.xlsx'
-#source_file_two = 'venv/source_files/two.xlsx' #default
 
 # Output HTML report path
 output_file = 'venv/report.html'
@@ -57,7 +56,7 @@ def get_column_index(sheet, column_name):
 
 # Creating dataframe from the source file
 
-def create_dataframe(workbook): #one useless argument for now
+def create_dataframe(workbook):  # one useless argument for now
     all_data = []
 
     for sheet in workbook.worksheets:
@@ -83,6 +82,7 @@ def create_dataframe(workbook): #one useless argument for now
     dataframe = pd.DataFrame(all_data)
     return dataframe
 
+
 # Merging two dataframes from two files that has to be compared
 
 def merging_df(dataframe1, dataframe2):
@@ -90,14 +90,16 @@ def merging_df(dataframe1, dataframe2):
     result = result[['Sheet name', 'ID', 'Source1', 'Source2', 'Target1', 'Target2']]
     return result
 
+
 # Filter rows to remove those where there's nothing changed
 def filter_dataframe(df):
     return df.loc[
         ~(
-            ((df['Source1'] == df['Source2']) | (pd.isna(df['Source1']) & pd.isna(df['Source2']))) &
-            ((df['Target1'] == df['Target2']) | (pd.isna(df['Target1']) & pd.isna(df['Target2'])))
+                ((df['Source1'] == df['Source2']) | (pd.isna(df['Source1']) & pd.isna(df['Source2']))) &
+                ((df['Target1'] == df['Target2']) | (pd.isna(df['Target1']) & pd.isna(df['Target2'])))
         )
     ]
+
 
 # Adding columns with difference in source and target
 def add_diff_columns(df):
@@ -117,12 +119,12 @@ def add_diff_columns(df):
     df['Target_diff'] = df.apply(lambda row: compute_diff(row['Target1'], row['Target2']), axis=1)
     return df
 
-#Saving the file to HTML report
+
+# Saving the file to HTML report
 def save_df_to_html(df, file_name):
     html = df.to_html(escape=False)  # Set escape=False to render HTML content in the DataFrame
     with open(file_name, "w", encoding="utf-8") as f:
         f.write(html)
-
 
 
 # Processing files
@@ -141,18 +143,22 @@ def process_files(source1, source2):
 
     return filtered_df_with_diff
 
+
 ### GUI ###
 def browse_file_one():
     file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
     source_file_one.set(file_path)
 
+
 def browse_file_two():
     file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
     source_file_two.set(file_path)
 
+
 def save_file():
     file_path = filedialog.asksaveasfilename(filetypes=[("HTML files", "*.html")])
     output_file.set(file_path)
+
 
 def execute_program():
     global source_file_one_name
@@ -161,84 +167,99 @@ def execute_program():
     source_file_one_name = os.path.splitext(os.path.basename(source_file_one.get()))[0]
     source_file_two_name = 'filename2'
     source_file_two_name = os.path.splitext(os.path.basename(source_file_two.get()))[0]
-#    progress_bar["maximum"] = 4
-#    progress_bar["value"] = 0
+    #    progress_bar["maximum"] = 4
+    #    progress_bar["value"] = 0
     root.update_idletasks()
 
     # Replace this section with the actual steps of your process
     for i in range(1, 5):
-#        progress_bar["value"] = i
+        #        progress_bar["value"] = i
         root.update_idletasks()
         time.sleep(1)  # Replace this with your processing logic
 
     # Add your code to process the files here
     filtered_df_with_diff = process_files(source_file_one, source_file_two)
-    filtered_df_with_diff = filtered_df_with_diff.rename(columns={'Source1': ('Source 1: ' +str(source_file_one_name)),'Source2': ('Source 2: ' +str(source_file_two_name))})
-    filtered_df_with_diff = filtered_df_with_diff.rename(columns={'Target1': ('Target 1: ' +str(source_file_one_name)),'Target2': ('Target 2: ' +str(source_file_two_name))})
+    filtered_df_with_diff = filtered_df_with_diff.rename(columns={'Source1': ('Source 1: ' + str(source_file_one_name)),
+                                                                  'Source2': ('Source 2: ' + str(
+                                                                      source_file_two_name))})
+    filtered_df_with_diff = filtered_df_with_diff.rename(columns={'Target1': ('Target 1: ' + str(source_file_one_name)),
+                                                                  'Target2': ('Target 2: ' + str(
+                                                                      source_file_two_name))})
     save_df_to_html(filtered_df_with_diff, output_file.get())
     messagebox.showinfo("Process complete", "Report has been generated. You can find it at: " + str(output_file.get()))
     pass
 
+
 def exit_program():
     root.destroy()
 
+
 root = Tk()
-root.geometry("460x320")
+root.geometry("650x370")
 
 # Set the window title
-root.title("HK Diff Checker, v2023-03-28")
+root.title(str("HK Diff Checker, " + current_version))
 
 source_file_one = StringVar()
 source_file_two = StringVar()
 output_file = StringVar()
 
+label = tk.Label(root, text="This tool will take two *.xlsx files with string ID, source, and target,distributed between\nmultiple sheets, and will create an HTML report with highlighting of differences.", justify="left")
+label.grid(row=0, column=0, padx=10, pady=0)
+
+
+browse_one_button = Button(root, text="Browse file #1", command=browse_file_one)
+browse_one_button.grid(row=2, column=0, sticky='w', padx=10, pady=10)
+
+file_one_entry = Entry(root, textvariable=source_file_one, width=85)
+file_one_entry.grid(row=2, column=0, sticky='w', padx=110, pady=10)
+
+browse_two_button = Button(root, text="Browse file #2", command=browse_file_two)
+browse_two_button.grid(row=3, column=0, sticky='w', padx=10, pady=10)
+
+file_two_entry = Entry(root, textvariable=source_file_two, width=85)
+file_two_entry.grid(row=3, column=0, sticky='w', padx=110, pady=10)
+
+save_button = Button(root, text="Save report to...", command=save_file)
+save_button.grid(row=4, column=0, sticky='w', padx=10, pady=10)
+
+now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+output_file_path = os.path.join(os.getcwd(), f"report_{now}.html")
+output_file = tk.StringVar(value=output_file_path)
+save_entry = Entry(root, textvariable=output_file, width=85)
+save_entry.grid(row=4, column=0, sticky='w', padx=110, pady=10)
+
+process_button = Button(root, text="CHECK DIFF", command=execute_program)
+process_button.grid(row=5, column=0, sticky='w', padx=10, pady=10)
+
 target_lang_code = tk.StringVar()
 target_lang_combobox = ttk.Combobox(root, textvariable=target_lang_column, values=language_codes, width=6)
 target_lang_combobox.current(language_codes.index('ru'))
-target_lang_combobox.grid(row=5, column=0, sticky='w', padx=10, pady=10)
+target_lang_combobox.grid(row=7, column=0, sticky='w', padx=10, pady=10)
 
-browse_one_button = Button(root, text="Browse file #1", command=browse_file_one)
-browse_one_button.grid(row=0, column=0, sticky='w', padx=10, pady=10)
-
-file_one_entry = Entry(root, textvariable=source_file_one, width=50)
-file_one_entry.grid(row=0, column=1, sticky='w', padx=10, pady=10)
-
-browse_two_button = Button(root, text="Browse file #2", command=browse_file_two)
-browse_two_button.grid(row=1, column=0, sticky='w', padx=10, pady=10)
-
-file_two_entry = Entry(root, textvariable=source_file_two, width=50)
-file_two_entry.grid(row=1, column=1, sticky='w', padx=10, pady=10)
-
-save_button = Button(root, text="Save report to...", command=save_file)
-save_button.grid(row=2, column=0, sticky='w', padx=10, pady=10)
-
-save_entry = Entry(root, textvariable=output_file, width=50)
-save_entry.grid(row=2, column=1, sticky='w', padx=10, pady=10)
-
-process_button = Button(root, text="CHECK DIFF", command=execute_program)
-process_button.grid(row=3, column=0, sticky='w', padx=10, pady=10)
 
 exit_button = Button(root, text="Exit", command=exit_program)
-exit_button.grid(row=10, column=0, sticky='w', padx=50, pady=10)
+exit_button.grid(row=9, column=0, sticky='w', padx=10, pady=10)
 
-#progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
-#progress_bar.grid(column=0, row=5, columnspan=3, sticky='w')
+
+# progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
+# progress_bar.grid(column=0, row=5, columnspan=3, sticky='w')
 
 
 # Text in the bottom
 def open_url(url):
     webbrowser.open(url)
-about_label = tk.Label(root, text="github.com/wtigga  ||  Vladimir Zhdanov, 2023-03-28", fg="blue", cursor="hand2")
-about_text = tk.Label(root, text="Diff for translation sources.")
-about_text.grid(row=6, column=1, sticky='e', padx=0, pady=0)
-about_label.bind("<Button-1>", lambda event: open_url("https://github.com/wtigga/Translation-Files-Diff-Report-HK"))
-about_label.grid(row=7, column=1, sticky='e', padx=10, pady=0)
 
+
+about_label = tk.Label(root, text="github.com/wtigga\nVladimir Zhdanov, 2023-03-28", fg="blue", cursor="hand2", justify="left")
+about_text = tk.Label(root, text=current_version)
+about_text.grid(row=10, column=0, sticky='w', padx=10, pady=0)
+about_label.bind("<Button-1>", lambda event: open_url("https://github.com/wtigga/Translation-Files-Diff-Report-HK"))
+about_label.grid(row=11, column=0, sticky='w', padx=10, pady=0)
 
 ### EXECUTING ###
 
 root.mainloop()
-
 
 '''While the logic and architecture are products of the author's thinking capabilities,
 lots of functions in the code were written with the help of OpenAi's ChatGPT 3.5 and ChatGPT 4.'''
