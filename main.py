@@ -195,7 +195,7 @@ def exit_program():
 
 
 root = Tk()
-root.geometry("650x370")
+root.geometry("650x420")
 
 # Set the window title
 root.title(str("HK Diff Checker, " + current_version))
