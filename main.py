@@ -8,8 +8,9 @@ import time
 import datetime
 import webbrowser
 import os
+import sys
 
-current_version = '0.12 (2023-03-29)'
+current_version = '0.13 (2023-03-29_2)'
 
 # Set Pandas display options
 pd.set_option('display.max_rows', None)
@@ -45,6 +46,7 @@ target_lang_column = 'ru'
 # Load the source XLSX into memory
 def open_excel_file(file_path):
     workbook = openpyxl.load_workbook(file_path)
+    print(workbook)
     return workbook
 
 
@@ -57,10 +59,11 @@ def get_column_index(sheet, column_name):
 
 # Creating dataframe from the source file
 
-def create_dataframe(workbook):  # one useless argument for now
+def create_dataframe(workbook):
     all_data = []
 
     for sheet in workbook.worksheets:
+        print(f"Processing sheet {sheet.title}")
         sheet_data = []
 
         string_id_index = get_column_index(sheet, string_id_column)
@@ -68,9 +71,13 @@ def create_dataframe(workbook):  # one useless argument for now
         target_lang_index = get_column_index(sheet, target_lang_column)
 
         if string_id_index is None or source_lang_index is None or target_lang_index is None:
+            print(f"Skipping sheet {sheet.title} because it does not have the required columns.")
             continue
 
         for row in sheet.iter_rows(min_row=2, values_only=True):  # Assuming the first row has headers
+            if all(cell is None for cell in row[string_id_index:target_lang_index+1]):
+                print(f"Skipping row in sheet {sheet.title} because it is missing data from the required columns.")
+                continue
             sheet_data.append({
                 'Sheet name': sheet.title,
                 string_id_column: row[string_id_index],
@@ -132,14 +139,19 @@ def process_files(source1, source2):
     workbook1 = open_excel_file(source1.get())
     df1 = create_dataframe(workbook1)
     df1 = df1.rename(columns={'Source': 'Source1', 'Target': 'Target1'})
+    print('workbook 1 complete')
 
     workbook2 = open_excel_file(source2.get())
     df2 = create_dataframe(workbook2)
     df2 = df2.rename(columns={'Source': 'Source2', 'Target': 'Target2'})
+    print('workbook 2 complete')
 
     merged_df = merging_df(df1, df2)
+    print('merge complete')
     filtered_df = filter_dataframe(merged_df)
+    print('filter complete')
     filtered_df_with_diff = add_diff_columns(filtered_df)
+    print('diff complete')
 
     return filtered_df_with_diff
 
@@ -164,8 +176,10 @@ def execute_program():
     global source_file_one_name
     global source_file_two_name
     source_file_one_name = 'filename1'
+    print(source_file_one_name)
     source_file_one_name = os.path.splitext(os.path.basename(source_file_one.get()))[0]
     source_file_two_name = 'filename2'
+    print(source_file_two_name)
     source_file_two_name = os.path.splitext(os.path.basename(source_file_two.get()))[0]
     #    progress_bar["maximum"] = 4
     #    progress_bar["value"] = 0
@@ -195,7 +209,7 @@ def exit_program():
 
 
 root = Tk()
-root.geometry("650x420")
+root.geometry("650x405")
 
 # Set the window title
 root.title(str("HK Diff Checker, " + current_version))
@@ -248,7 +262,9 @@ target_lang_combobox.bind("<<ComboboxSelected>>", update_target_lang_column)
 
 def update_id_lang_column(event):
     global target_id_column
+    global string_id_column
     target_id_column = target_id_code.get()
+    string_id_column = target_id_column
     print("Source ID updated to:", target_id_column)
 id_codes = ['ID', 'TextId']
 target_id_column = 'ID'
@@ -284,9 +300,30 @@ about_text.grid(row=10, column=0, sticky='w', padx=10, pady=0)
 about_label.bind("<Button-1>", lambda event: open_url("https://github.com/wtigga/Translation-Files-Diff-Report-HK"))
 about_label.grid(row=11, column=0, sticky='w', padx=10, pady=0)
 
+# console output
+
+class TextRedirector:
+    def __init__(self, widget):
+        self.widget = widget
+
+    def write(self, text):
+        self.widget.configure(state='normal')
+        self.widget.insert(tk.END, text)
+        self.widget.see(tk.END)
+        self.widget.configure(state='disabled')
+
+    def flush(self):
+        pass
+
+output_text = tk.Text(root, wrap='word', height=10, state='disabled')
+output_text.grid(row=12, column=0, sticky='nsew')
+
+sys.stdout = TextRedirector(output_text)
+
+
 ### EXECUTING ###
 
 root.mainloop()
 
-'''While the logic and architecture are products of the author's thinking capabilities,
-lots of functions in the code were written with the help of OpenAi's ChatGPT 3.5 and ChatGPT 4.'''
+'''While the logic and the architecture are products of the author's thinking capabilities,
+lots of functions in this code were written with the help of OpenAi's ChatGPT 3.5 and ChatGPT 4.'''
