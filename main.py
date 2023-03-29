@@ -9,7 +9,7 @@ import datetime
 import webbrowser
 import os
 
-current_version = '0.11 (2023-03-28)'
+current_version = '0.12 (2023-03-29)'
 
 # Set Pandas display options
 pd.set_option('display.max_rows', None)
@@ -31,10 +31,11 @@ source_file_two = 'venv/source_files/real_Files/two.xlsx'
 output_file = 'venv/report.html'
 
 # Language list
-language_codes = ['en', 'kr', 'cht', 'jp', 'th', 'vi', 'id', 'es', 'ru', 'pt', 'de', 'fr']
+language_codes = ['RU','en', 'kr', 'cht', 'jp', 'th', 'vi', 'id', 'es', 'ru', 'pt', 'de', 'fr', 'CHT', 'DE', 'EN', 'ES', 'FR', 'ID', 'JP', 'KR', 'PT', 'RU', 'TH', 'VI', 'TR', 'IT']
 
 # Location of content in source files, case-sensitive
-string_id_column = 'ID'
+#string_id_column = 'ID'
+string_id_column = 'TextId'
 source_lang_column = 'CHS'
 target_lang_column = 'ru'
 
@@ -72,7 +73,7 @@ def create_dataframe(workbook):  # one useless argument for now
         for row in sheet.iter_rows(min_row=2, values_only=True):  # Assuming the first row has headers
             sheet_data.append({
                 'Sheet name': sheet.title,
-                'ID': row[string_id_index],
+                string_id_column: row[string_id_index],
                 'Source': row[source_lang_index],
                 'Target': row[target_lang_index]
             })
@@ -86,8 +87,8 @@ def create_dataframe(workbook):  # one useless argument for now
 # Merging two dataframes from two files that has to be compared
 
 def merging_df(dataframe1, dataframe2):
-    result = pd.merge(dataframe1, dataframe2, on=['Sheet name', 'ID'], how='outer')
-    result = result[['Sheet name', 'ID', 'Source1', 'Source2', 'Target1', 'Target2']]
+    result = pd.merge(dataframe1, dataframe2, on=['Sheet name', string_id_column], how='outer')
+    result = result[['Sheet name', string_id_column, 'Source1', 'Source2', 'Target1', 'Target2']]
     return result
 
 
@@ -125,7 +126,6 @@ def save_df_to_html(df, file_name):
     html = df.to_html(escape=False)  # Set escape=False to render HTML content in the DataFrame
     with open(file_name, "w", encoding="utf-8") as f:
         f.write(html)
-
 
 # Processing files
 def process_files(source1, source2):
@@ -232,14 +232,41 @@ save_entry.grid(row=4, column=0, sticky='w', padx=110, pady=10)
 process_button = Button(root, text="CHECK DIFF", command=execute_program)
 process_button.grid(row=5, column=0, sticky='w', padx=10, pady=10)
 
+def update_target_lang_column(event):
+    global target_lang_column
+    target_lang_column = target_lang_code.get()
+    print("Target language column updated to:", target_lang_column)
+
+labellang = tk.Label(root, text="Target lang column (case sensitive)")
+labellang.grid(row=7, column=0, padx=10, pady=0, sticky='w')
+
 target_lang_code = tk.StringVar()
-target_lang_combobox = ttk.Combobox(root, textvariable=target_lang_column, values=language_codes, width=6)
-target_lang_combobox.current(language_codes.index('ru'))
-target_lang_combobox.grid(row=7, column=0, sticky='w', padx=10, pady=10)
+target_lang_combobox = ttk.Combobox(root, textvariable=target_lang_code, values=language_codes, width=6)
+target_lang_combobox.current(language_codes.index(target_lang_column))
+target_lang_combobox.grid(row=7, column=0, sticky='w', padx=220, pady=10)
+target_lang_combobox.bind("<<ComboboxSelected>>", update_target_lang_column)
+
+def update_id_lang_column(event):
+    global target_id_column
+    target_id_column = target_id_code.get()
+    print("Source ID updated to:", target_id_column)
+id_codes = ['ID', 'TextId']
+target_id_column = 'ID'
+
+labelid = tk.Label(root, text="ID column (case sensitive)")
+labelid.grid(row=8, column=0, padx=10, pady=0, sticky='w')
+target_id_code = tk.StringVar()
+target_id_combobox = ttk.Combobox(root, textvariable=target_id_code, values=id_codes, width=6)
+target_id_combobox.current(id_codes.index(target_id_column))
+target_id_combobox.grid(row=8, column=0, sticky='w', padx=220, pady=10)
+target_id_combobox.bind("<<ComboboxSelected>>", update_id_lang_column)
+
+
 
 
 exit_button = Button(root, text="Exit", command=exit_program)
 exit_button.grid(row=9, column=0, sticky='w', padx=10, pady=10)
+
 
 
 # progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
