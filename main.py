@@ -278,7 +278,7 @@ def open_url(url):
     webbrowser.open(url)
 
 
-about_label = tk.Label(root, text="github.com/wtigga\nVladimir Zhdanov, 2023-03-28", fg="blue", cursor="hand2", justify="left")
+about_label = tk.Label(root, text="github.com/wtigga\nVladimir Zhdanov", fg="blue", cursor="hand2", justify="left")
 about_text = tk.Label(root, text=current_version)
 about_text.grid(row=10, column=0, sticky='w', padx=10, pady=0)
 about_label.bind("<Button-1>", lambda event: open_url("https://github.com/wtigga/Translation-Files-Diff-Report-HK"))
