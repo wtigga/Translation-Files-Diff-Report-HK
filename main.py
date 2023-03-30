@@ -2,15 +2,14 @@ import openpyxl
 import pandas as pd
 from diff_match_patch import diff_match_patch
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-from tkinter import Tk, StringVar, Button, Entry
+from tkinter import ttk, filedialog, messagebox, Tk, StringVar, Button, Entry
 import time
 import datetime
 import webbrowser
 import os
 import sys
 
-current_version = '0.14 (2023-03-30'
+current_version = '0.14 (2023-03-30)'
 
 # Set Pandas display options
 pd.set_option('display.max_rows', None)
@@ -36,7 +35,7 @@ language_codes = ['RU','en', 'kr', 'cht', 'jp', 'th', 'vi', 'id', 'es', 'ru', 'p
 
 # Location of content in source files, case-sensitive
 #string_id_column = 'ID'
-string_id_column = 'TextId'
+#string_id_column = 'TextId'
 source_lang_column = 'CHS'
 target_lang_column = 'ru'
 
@@ -45,21 +44,31 @@ target_lang_column = 'ru'
 
 # Load the source XLSX into memory
 def open_excel_file(file_path):
-    workbook = openpyxl.load_workbook(file_path)
-    print(workbook)
-    return workbook
+    try:
+        workbook = openpyxl.load_workbook(file_path)
+        print(workbook)
+        return workbook
+    except Exception as e:
+        print("Error occurred while opening file:", e)
 
 
 def get_column_index(sheet, column_name):
-    for cell in sheet[1]:  # Assuming the first row has headers
-        if cell.value == column_name:
-            return cell.column - 1
-    return None
+    try:
+        for cell in sheet[1]:  # Assuming the first row has headers
+            if cell.value == column_name:
+                return cell.column - 1
+        raise ValueError(f"Column '{column_name}' not found in sheet.")
+    except Exception as e:
+        print("Error occurred while getting column index:", e)
+        return None
+
 
 
 # Creating dataframe from the source file
 
 def create_dataframe(workbook):
+    global string_id_column
+    global target_lang_column
     all_data = []
 
     for sheet in workbook.worksheets:
@@ -94,6 +103,7 @@ def create_dataframe(workbook):
 # Merging two dataframes from two files that has to be compared
 
 def merging_df(dataframe1, dataframe2):
+    global string_id_column
     result = pd.merge(dataframe1, dataframe2, on=['Sheet name', string_id_column], how='outer')
     result = result[['Sheet name', string_id_column, 'Source1', 'Source2', 'Target1', 'Target2']]
     return result
@@ -267,9 +277,12 @@ def update_id_lang_column(event):
     global string_id_column
     target_id_column = target_id_code.get()
     string_id_column = target_id_column
-    print("Source ID updated to:", target_id_column)
+    print("Source ID updated to:", target_id_column, string_id_column)
+
+string_id_column = 'TextId'
 id_codes = ['ID', 'TextId']
 target_id_column = 'ID'
+string_id_column = 'ID'
 
 labelid = tk.Label(root, text="ID column (case sensitive)")
 labelid.grid(row=8, column=0, padx=10, pady=0, sticky='w')
