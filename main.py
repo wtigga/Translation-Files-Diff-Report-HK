@@ -10,7 +10,7 @@ import webbrowser
 import os
 import sys
 
-current_version = '0.13 (2023-03-29_2)'
+current_version = '0.14 (2023-03-30'
 
 # Set Pandas display options
 pd.set_option('display.max_rows', None)
@@ -169,6 +169,8 @@ def browse_file_two():
 
 def save_file():
     file_path = filedialog.asksaveasfilename(filetypes=[("HTML files", "*.html")])
+    if not file_path.endswith(".html"):
+        file_path += ".html"
     output_file.set(file_path)
 
 
@@ -301,7 +303,6 @@ about_label.bind("<Button-1>", lambda event: open_url("https://github.com/wtigga
 about_label.grid(row=11, column=0, sticky='w', padx=10, pady=0)
 
 # console output
-
 class TextRedirector:
     def __init__(self, widget):
         self.widget = widget
