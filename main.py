@@ -1,15 +1,16 @@
+import datetime
+import os
+import sys
+import time
+import tkinter as tk
+import webbrowser
+from tkinter import ttk, filedialog, messagebox, Tk, StringVar, Entry
+
 import openpyxl
 import pandas as pd
 from diff_match_patch import diff_match_patch
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, Tk, StringVar, Button, Entry
-import time
-import datetime
-import webbrowser
-import os
-import sys
 
-current_version = '0.14 (2023-03-30)'
+current_version = '0.15 (2023-04-27)'
 
 # Set Pandas display options
 pd.set_option('display.max_rows', None)
@@ -17,7 +18,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
 pd.set_option('display.expand_frame_repr', False)
 
-### VARIABLES ###
+# VARIABLES
 # Source Files
 # File 1
 source_file_one_simplename = 'Default File1 name'
@@ -31,18 +32,24 @@ source_file_two = 'venv/source_files/real_Files/two.xlsx'
 output_file = 'venv/report.html'
 
 # Language list
-language_codes = ['RU','en', 'kr', 'cht', 'jp', 'th', 'vi', 'id', 'es', 'ru', 'pt', 'de', 'fr', 'CHT', 'DE', 'EN', 'ES', 'FR', 'ID', 'JP', 'KR', 'PT', 'RU', 'TH', 'VI', 'TR', 'IT']
+language_codes = ['RU', 'en', 'kr', 'cht', 'jp',
+                  'th', 'vi', 'id', 'es', 'ru',
+                  'pt', 'de', 'fr', 'CHT', 'DE',
+                  'EN', 'ES', 'FR', 'ID', 'JP',
+                  'KR', 'PT', 'RU', 'TH', 'VI', 'TR', 'IT']
 
 # Location of content in source files, case-sensitive
-#string_id_column = 'ID'
-#string_id_column = 'TextId'
 source_lang_column = 'CHS'
 target_lang_column = 'ru'
 
+source_file_one_name = ''
+source_file_two_name = ''
 
-### FUNCTIONALITY ###
 
+# FUNCTIONALITY
 # Load the source XLSX into memory
+
+
 def open_excel_file(file_path):
     try:
         workbook = openpyxl.load_workbook(file_path)
@@ -61,7 +68,6 @@ def get_column_index(sheet, column_name):
     except Exception as e:
         print("Error occurred while getting column index:", e)
         return None
-
 
 
 # Creating dataframe from the source file
@@ -84,7 +90,7 @@ def create_dataframe(workbook):
             continue
 
         for row in sheet.iter_rows(min_row=2, values_only=True):  # Assuming the first row has headers
-            if all(cell is None for cell in row[string_id_index:target_lang_index+1]):
+            if all(cell is None for cell in row[string_id_index:target_lang_index + 1]):
                 print(f"Skipping row in sheet {sheet.title} because it is missing data from the required columns.")
                 continue
             sheet_data.append({
@@ -144,6 +150,7 @@ def save_df_to_html(df, file_name):
     with open(file_name, "w", encoding="utf-8") as f:
         f.write(html)
 
+
 # Processing files
 def process_files(source1, source2):
     workbook1 = open_excel_file(source1.get())
@@ -166,7 +173,7 @@ def process_files(source1, source2):
     return filtered_df_with_diff
 
 
-### GUI ###
+# GUI
 def browse_file_one():
     file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
     source_file_one.set(file_path)
@@ -216,12 +223,8 @@ def execute_program():
     pass
 
 
-def exit_program():
-    root.destroy()
-
-
 root = Tk()
-root.geometry("650x405")
+root.geometry("650x415")
 
 # Set the window title
 root.title(str("HK Diff Checker, " + current_version))
@@ -230,23 +233,26 @@ source_file_one = StringVar()
 source_file_two = StringVar()
 output_file = StringVar()
 
-label = tk.Label(root, text="This tool will take two *.xlsx files with string ID, source, and target,distributed between\nmultiple sheets, and will create an HTML report with highlighting of differences.", justify="left")
-label.grid(row=0, column=0, padx=10, pady=0)
+label = tk.Label(root,
+                 text="This tool will take two *.xlsx files with string ID, "
+                      "source, and target,distributed between"
+                      "\nmultiple sheets, and will create an HTML report with highlighting of differences.",
+                 justify="left")
+label.grid(row=0, column=0, padx=10, pady=0, sticky='w')
 
-
-browse_one_button = Button(root, text="Browse file #1", command=browse_file_one)
+browse_one_button = ttk.Button(root, text="Browse file #1", command=browse_file_one)
 browse_one_button.grid(row=2, column=0, sticky='w', padx=10, pady=10)
 
 file_one_entry = Entry(root, textvariable=source_file_one, width=85)
 file_one_entry.grid(row=2, column=0, sticky='w', padx=110, pady=10)
 
-browse_two_button = Button(root, text="Browse file #2", command=browse_file_two)
+browse_two_button = ttk.Button(root, text="Browse file #2", command=browse_file_two)
 browse_two_button.grid(row=3, column=0, sticky='w', padx=10, pady=10)
 
 file_two_entry = Entry(root, textvariable=source_file_two, width=85)
 file_two_entry.grid(row=3, column=0, sticky='w', padx=110, pady=10)
 
-save_button = Button(root, text="Save report to...", command=save_file)
+save_button = ttk.Button(root, text="Save report to...", command=save_file)
 save_button.grid(row=4, column=0, sticky='w', padx=10, pady=10)
 
 now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -255,22 +261,26 @@ output_file = tk.StringVar(value=output_file_path)
 save_entry = Entry(root, textvariable=output_file, width=85)
 save_entry.grid(row=4, column=0, sticky='w', padx=110, pady=10)
 
-process_button = Button(root, text="CHECK DIFF", command=execute_program)
+process_button = ttk.Button(root, text="CHECK DIFF", command=execute_program)
 process_button.grid(row=5, column=0, sticky='w', padx=10, pady=10)
+
 
 def update_target_lang_column(event):
     global target_lang_column
     target_lang_column = target_lang_code.get()
     print("Target language column updated to:", target_lang_column)
 
+
 labellang = tk.Label(root, text="Target lang column (case sensitive)")
 labellang.grid(row=7, column=0, padx=10, pady=0, sticky='w')
 
 target_lang_code = tk.StringVar()
-target_lang_combobox = ttk.Combobox(root, textvariable=target_lang_code, values=language_codes, width=6)
+target_lang_combobox = ttk.Combobox(root, textvariable=target_lang_code, values=language_codes, width=6,
+                                    state='readonly')
 target_lang_combobox.current(language_codes.index(target_lang_column))
 target_lang_combobox.grid(row=7, column=0, sticky='w', padx=220, pady=10)
 target_lang_combobox.bind("<<ComboboxSelected>>", update_target_lang_column)
+
 
 def update_id_lang_column(event):
     global target_id_column
@@ -278,6 +288,7 @@ def update_id_lang_column(event):
     target_id_column = target_id_code.get()
     string_id_column = target_id_column
     print("Source ID updated to:", target_id_column, string_id_column)
+
 
 string_id_column = 'TextId'
 id_codes = ['ID', 'TextId']
@@ -287,17 +298,10 @@ string_id_column = 'ID'
 labelid = tk.Label(root, text="ID column (case sensitive)")
 labelid.grid(row=8, column=0, padx=10, pady=0, sticky='w')
 target_id_code = tk.StringVar()
-target_id_combobox = ttk.Combobox(root, textvariable=target_id_code, values=id_codes, width=6)
+target_id_combobox = ttk.Combobox(root, textvariable=target_id_code, values=id_codes, width=6, state='readonly')
 target_id_combobox.current(id_codes.index(target_id_column))
 target_id_combobox.grid(row=8, column=0, sticky='w', padx=220, pady=10)
 target_id_combobox.bind("<<ComboboxSelected>>", update_id_lang_column)
-
-
-
-
-exit_button = Button(root, text="Exit", command=exit_program)
-exit_button.grid(row=9, column=0, sticky='w', padx=10, pady=10)
-
 
 
 # progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
@@ -315,6 +319,7 @@ about_text.grid(row=10, column=0, sticky='w', padx=10, pady=0)
 about_label.bind("<Button-1>", lambda event: open_url("https://github.com/wtigga/Translation-Files-Diff-Report-HK"))
 about_label.grid(row=11, column=0, sticky='w', padx=10, pady=0)
 
+
 # console output
 class TextRedirector:
     def __init__(self, widget):
@@ -329,13 +334,13 @@ class TextRedirector:
     def flush(self):
         pass
 
-output_text = tk.Text(root, wrap='word', height=10, state='disabled')
+
+output_text = tk.Text(root, wrap='word', height=3, state='disabled')
 output_text.grid(row=12, column=0, sticky='nsew')
 
 sys.stdout = TextRedirector(output_text)
 
-
-### EXECUTING ###
+# EXECUTING
 
 root.mainloop()
 
